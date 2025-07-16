@@ -7,13 +7,13 @@ import { ApiResponse  } from "../utils/ApiResponse.js";
 const registerUser = asyncHandler( async (req,res) => {
     // 1. get user details from frontend
 
-    const {fullname,email,username,password} = req.body
-    console.log(`Email -> ${email}`);
+    const {fullName,email,username,password} = req.body
+    // console.log(`Email -> ${email}`);
 
     // 2. validation - not empty
 
     if(
-        [fullname,email,username,password].some(
+        [fullName,email,username,password].some(
             (field) => field?.trim() === ""
         )
     ) {
@@ -22,7 +22,7 @@ const registerUser = asyncHandler( async (req,res) => {
 
     // 3. check if user already exists: username,email
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username } , { email }]
     });
 
@@ -33,7 +33,14 @@ const registerUser = asyncHandler( async (req,res) => {
     // 4. check for images, check for avatar
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length >0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
+
+
 
     if(!avatarLocalPath) {
         throw new ApiError(400,"Avatar file is required")
@@ -51,7 +58,7 @@ const registerUser = asyncHandler( async (req,res) => {
     // 6. create user object - create entry in DB
 
     const user = await User.create({
-        fullname,
+        fullName,
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
         email,
